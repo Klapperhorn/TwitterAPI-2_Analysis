@@ -174,13 +174,23 @@ def NoStopwords(text,nlp):
     return  NoStopwords
 
 def Sentiment(text,nlp):
-    
+    try:
+        if type(text)!=str:
+            return
+        doc = nlp(text)
+        polarity=doc._.blob.polarity
 
-    nlp.add_pipe('spacytextblob')
-    doc = nlp(text)
-    polarity=doc._.blob.polarity
-    subjectivity=doc._.blob.subjectivity
+        subjectivity=doc._.blob.subjectivity
+        print(polarity,subjectivity)
+    except:
+        print("sentiment not working", end=".")
+            
+        polarity=0
+        subjectivity=0
+        
     return pd.Series([polarity, subjectivity])
+
+    
 
 def langDetect(text):
     try:
@@ -193,7 +203,7 @@ def langDetect(text):
 
 def NLP_Pipeline(df, sentiment=False, language="en"):
    
-    df["clean_text"]=df.text.apply(TweetCleaner)
+    df["text_clean"]=df.text.apply(TweetCleaner)
     print("cleaning done.")
     df["letters_count"]=df.text_clean.apply(lambda x: len(x))
     df["word_count"]=df.text_clean.apply(lambda x: len(x.split()))
@@ -211,7 +221,7 @@ def NLP_Pipeline(df, sentiment=False, language="en"):
     df["language"]=df.text_clean.apply(langDetect)
     print("language detection done.")
     
-    df["pure_text"]=df[df.language==language].clean_text.apply(pureText)
+    df["pure_text"]=df[df.language==language].text_clean.apply(pureText)
     print("pure english text done. Next: Token & Lemmatizing.")
     
     df["Lemmata"]=df.pure_text.apply(Tokenizer, nlp=nlp)    
