@@ -91,26 +91,34 @@ def filter_df(df,save=False, n_tweets=10,start="2022-11-01",end="2023-01-20",lik
 
 
 
-def TweetsHist(df,resample="1D",start='2022-11-04',end='2023-01-20', normalize=False,label=False):
+def TweetsHist(df,name="polarity", resample="1D",start='2022-11-04',end='2023-01-20', normalize=False,label=False):
 
     TimeRow=df.set_index("created_at")
     if start!=False:
         TimeRow=TimeRow[TimeRow.index.strftime('%Y-%m-%d') > start]
     if end!=False:
         TimeRow=TimeRow[TimeRow.index.strftime('%Y-%m-%d') < end]
-    TimeRow=TimeRow.resample(resample)["id"].count()
-    
-    if normalize==True:
-        TimeRow=TimeRow/TimeRow.max()
         
-    TimeRow.plot(figsize=(16,5), title=f"Tweets per {resample}")
+    if name!="count":
+        TimeRow=TimeRow.resample(resample)[name].mean()  
+        if normalize==True:
+            TimeRow=TimeRow/TimeRow.max()   
+    
+        TimeRow.plot(figsize=(16,5), title=f"The mean {name} in {resample} over time.")
+    
+
+    if name=="count":
+        if normalize==True:
+            TimeRow=TimeRow/TimeRow.max()   
+        TimeRow=TimeRow.resample(resample)["id"].count()
+        TimeRow.plot(figsize=(16,5), title=f"Tweets per {resample}")
     
     if label!=False:
         import matplotlib.pyplot as plt
         plt.legend([label]);
 
     
-    return TimeRow
+    return TimeRow  
 
 # function to add value labels
 
@@ -188,8 +196,13 @@ def Keyword_context(text,search_word="sustainable",context=(4,4),n_examples=10):
         
         pos=list_of_words.index(similars)
      #   print(similars + ":   ")
+    
         
-        if pos>WordbeginLetters and pos+AfterWords<len(list_of_words):
+        if pos+AfterWords>=len(list_of_words):
+            AfterWords=len(list_of_words)
+        
+        if pos>WordbeginLetters:
+        
             
            # next_word =" ".join(list_of_words[pos-PreWord : pos+AfterWords])
             next_word =" ".join(list_of_words[pos-PreWords : pos+AfterWords+1])
